@@ -20,6 +20,7 @@ import (
 var (
 	FlagCommission       = "commission"
 	FlagMaxMessagesPerTx = "max-msgs"
+	FlagIsExpedited      = "is-expedited"
 )
 
 const (

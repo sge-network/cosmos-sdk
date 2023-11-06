@@ -82,6 +82,7 @@ message Proposal {
       [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"];
   google.protobuf.Timestamp voting_start_time = 8 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
   google.protobuf.Timestamp voting_end_time   = 9 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false];
+  bool is_expedited = 10;
 }
 
 // ProposalStatus enumerates the valid statuses of a proposal.
@@ -172,6 +173,14 @@ message VotingParams {
   //  Length of the voting period.
   google.protobuf.Duration voting_period = 1
       [(gogoproto.nullable) = false, (gogoproto.stdduration) = true, (gogoproto.jsontag) = "voting_period,omitempty"];
+
+  // Length of the expedited voting period.
+  google.protobuf.Duration expedited_voting_period = 3 [
+    (gogoproto.nullable)    = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.jsontag)     = "expedited_voting_period,omitempty",
+    (gogoproto.moretags)    = "yaml:\"expedited_voting_period\""
+  ];
 }
 
 // TallyParams defines the params for tallying votes on governance proposals.
@@ -197,5 +206,12 @@ message TallyParams {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false,
     (gogoproto.jsontag)    = "veto_threshold,omitempty"
+  ];
+
+  //  Minimum proportion of Yes votes for an expedited proposal to pass. Default value: 0.67.
+  bytes expedited_threshold = 4 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false,
+    (gogoproto.jsontag)    = "expedited_threshold,omitempty"
   ];
 }
