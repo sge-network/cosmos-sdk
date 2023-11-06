@@ -51,6 +51,7 @@ message TextProposal {
 
   string title       = 1;
   string description = 2;
+  bool is_expedited  = 3;
 }
 
 // Deposit defines an amount deposited by an account address to an active
@@ -166,6 +167,14 @@ message DepositParams {
     (gogoproto.stdduration) = true,
     (gogoproto.jsontag)     = "max_deposit_period,omitempty"
   ];
+
+  //  Minimum deposit for a expedited proposal to enter voting period.
+  repeated cosmos.base.v1beta1.Coin min_expedited_deposit = 3 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.moretags)     = "yaml:\"min_expedited_deposit\"",
+    (gogoproto.jsontag)      = "min_expedited_deposit,omitempty"
+  ];
 }
 
 // VotingParams defines the params for voting on governance proposals.
@@ -175,7 +184,7 @@ message VotingParams {
       [(gogoproto.nullable) = false, (gogoproto.stdduration) = true, (gogoproto.jsontag) = "voting_period,omitempty"];
 
   // Length of the expedited voting period.
-  google.protobuf.Duration expedited_voting_period = 3 [
+  google.protobuf.Duration expedited_voting_period = 2 [
     (gogoproto.nullable)    = false,
     (gogoproto.stdduration) = true,
     (gogoproto.jsontag)     = "expedited_voting_period,omitempty",
@@ -208,8 +217,15 @@ message TallyParams {
     (gogoproto.jsontag)    = "veto_threshold,omitempty"
   ];
 
+  //  Minimum percentage of total stake needed to vote for expedited proposal to be valid
+  bytes expedited_quorum = 4 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false,
+    (gogoproto.jsontag)    = "expedited_quorum,omitempty"
+  ];
+
   //  Minimum proportion of Yes votes for an expedited proposal to pass. Default value: 0.67.
-  bytes expedited_threshold = 4 [
+  bytes expedited_threshold = 5 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false,
     (gogoproto.jsontag)    = "expedited_threshold,omitempty"
