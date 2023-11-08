@@ -75,6 +75,14 @@ func validateDepositParams(i interface{}) error {
 	return nil
 }
 
+// GetMinimumDeposit returns minimum deposit based on the value isExpedited
+func (dp DepositParams) GetMinimumDeposit(isExpedited bool) sdk.Coins {
+	if isExpedited {
+		return dp.MinExpeditedDeposit
+	}
+	return dp.MinDeposit
+}
+
 // NewTallyParams creates a new TallyParams object
 func NewTallyParams(quorum, threshold, vetoThreshold sdk.Dec) TallyParams {
 	return TallyParams{

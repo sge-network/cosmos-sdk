@@ -32,7 +32,8 @@ const (
 	flagStatus       = "status"
 	flagMetadata     = "metadata"
 	// Deprecated: only used for v1beta1 legacy proposals.
-	FlagProposal = "proposal"
+	FlagProposal    = "proposal"
+	FlagIsExpedited = "is-expedited"
 )
 
 // ProposalFlags defines the core required fields of a legacy proposal. It is used to
@@ -117,12 +118,12 @@ Where proposal.json contains:
 				return err
 			}
 
-			msgs, metadata, deposit, err := parseSubmitProposal(clientCtx.Codec, args[0])
+			prop, msgs, deposit, err := parseSubmitProposal(clientCtx.Codec, args[0])
 			if err != nil {
 				return err
 			}
 
-			msg, err := v1.NewMsgSubmitProposal(msgs, deposit, clientCtx.GetFromAddress().String(), metadata)
+			msg, err := v1.NewMsgSubmitProposalWithExpedite(msgs, deposit, clientCtx.GetFromAddress().String(), prop.Metadata, prop.Expedited)
 			if err != nil {
 				return fmt.Errorf("invalid message: %w", err)
 			}
@@ -155,12 +156,13 @@ Where proposal.json contains:
   "title": "Test Proposal",
   "description": "My awesome proposal",
   "type": "Text",
+  "is_expedited": false,
   "deposit": "10test"
 }
 
 Which is equivalent to:
 
-$ %s tx gov submit-legacy-proposal --title="Test Proposal" --description="My awesome proposal" --type="Text" --deposit="10test" --from mykey
+$ %s tx gov submit-legacy-proposal --title="Test Proposal" --description="My awesome proposal" --type="Text" --deposit="10test" --is-expedited=false --from mykey
 `,
 				version.AppName, version.AppName,
 			),
@@ -181,12 +183,12 @@ $ %s tx gov submit-legacy-proposal --title="Test Proposal" --description="My awe
 				return err
 			}
 
-			content, ok := v1beta1.ContentFromProposalType(proposal.Title, proposal.Description, proposal.Type)
+			content, ok := v1beta1.ContentFromProposalType(proposal.Title, proposal.Description, proposal.Type, proposal.IsExpedited)
 			if !ok {
 				return fmt.Errorf("failed to create proposal content: unknown proposal type %s", proposal.Type)
 			}
 
-			msg, err := v1beta1.NewMsgSubmitProposal(content, amount, clientCtx.GetFromAddress())
+			msg, err := v1beta1.NewMsgSubmitProposalWithExpedite(content, amount, clientCtx.GetFromAddress(), proposal.IsExpedited)
 			if err != nil {
 				return fmt.Errorf("invalid message: %w", err)
 			}

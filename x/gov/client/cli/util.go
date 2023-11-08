@@ -16,6 +16,7 @@ type legacyProposal struct {
 	Title       string
 	Description string
 	Type        string
+	IsExpedited bool
 	Deposit     string
 }
 
@@ -44,6 +45,7 @@ func parseSubmitLegacyProposalFlags(fs *pflag.FlagSet) (*legacyProposal, error) 
 		proposal.Description, _ = fs.GetString(FlagDescription)
 		proposal.Type = govutils.NormalizeProposalType(proposalType)
 		proposal.Deposit, _ = fs.GetString(FlagDeposit)
+		proposal.
 		if err := proposal.validate(); err != nil {
 			return nil, err
 		}
@@ -77,22 +79,23 @@ func parseSubmitLegacyProposalFlags(fs *pflag.FlagSet) (*legacyProposal, error) 
 // proposal defines the new Msg-based proposal.
 type proposal struct {
 	// Msgs defines an array of sdk.Msgs proto-JSON-encoded as Anys.
-	Messages []json.RawMessage `json:"messages,omitempty"`
-	Metadata string            `json:"metadata"`
-	Deposit  string            `json:"deposit"`
+	Messages  []json.RawMessage `json:"messages,omitempty"`
+	Metadata  string            `json:"metadata"`
+	Deposit   string            `json:"deposit"`
+	Expedited bool              `json:"expedited"`
 }
 
-func parseSubmitProposal(cdc codec.Codec, path string) ([]sdk.Msg, string, sdk.Coins, error) {
+func parseSubmitProposal(cdc codec.Codec, path string) (proposal, []sdk.Msg, sdk.Coins, error) {
 	var proposal proposal
 
 	contents, err := os.ReadFile(path)
 	if err != nil {
-		return nil, "", nil, err
+		return proposal, nil, nil, err
 	}
 
 	err = json.Unmarshal(contents, &proposal)
 	if err != nil {
-		return nil, "", nil, err
+		return proposal, nil, nil, err
 	}
 
 	msgs := make([]sdk.Msg, len(proposal.Messages))
@@ -100,7 +103,7 @@ func parseSubmitProposal(cdc codec.Codec, path string) ([]sdk.Msg, string, sdk.C
 		var msg sdk.Msg
 		err := cdc.UnmarshalInterfaceJSON(anyJSON, &msg)
 		if err != nil {
-			return nil, "", nil, err
+			return proposal, nil, nil, err
 		}
 
 		msgs[i] = msg
@@ -108,8 +111,8 @@ func parseSubmitProposal(cdc codec.Codec, path string) ([]sdk.Msg, string, sdk.C
 
 	deposit, err := sdk.ParseCoinsNormalized(proposal.Deposit)
 	if err != nil {
-		return nil, "", nil, err
+		return proposal, nil, nil, err
 	}
 
-	return msgs, proposal.Metadata, deposit, nil
+	return proposal, msgs, deposit, nil
 }

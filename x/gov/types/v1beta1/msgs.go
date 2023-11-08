@@ -29,9 +29,14 @@ var (
 //
 //nolint:interfacer
 func NewMsgSubmitProposal(content Content, initialDeposit sdk.Coins, proposer sdk.AccAddress) (*MsgSubmitProposal, error) {
+	return NewMsgSubmitProposalWithExpedite(content, initialDeposit, proposer, false)
+}
+
+func NewMsgSubmitProposalWithExpedite(content Content, initialDeposit sdk.Coins, proposer sdk.AccAddress, isExpedited bool) (*MsgSubmitProposal, error) {
 	m := &MsgSubmitProposal{
 		InitialDeposit: initialDeposit,
 		Proposer:       proposer.String(),
+		IsExpedited:    isExpedited,
 	}
 	err := m.SetContent(content)
 	if err != nil {
