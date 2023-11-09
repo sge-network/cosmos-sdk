@@ -224,11 +224,12 @@ func (k legacyMsgServer) SubmitProposal(goCtx context.Context, msg *v1beta1.MsgS
 		return nil, fmt.Errorf("error converting legacy content into proposal message: %w", err)
 	}
 
-	proposal, err := v1.NewMsgSubmitProposal(
+	proposal, err := v1.NewMsgSubmitProposalWithExpedite(
 		[]sdk.Msg{contentMsg},
 		msg.InitialDeposit,
 		msg.Proposer,
 		"",
+		msg.IsExpedited,
 	)
 	if err != nil {
 		return nil, err

@@ -121,7 +121,7 @@ func EndBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 
 				keeper.InsertActiveProposalQueue(ctx, proposal.Id, *proposal.VotingEndTime)
 
-				tagValue = types.AttributeValueExpeditedProposalRejected
+				tagValue = types.AttributeValueExpeditedConverted
 				logMsg = "expedited proposal converted to regular"
 			} else {
 				// When regular proposal fails, it is rejected and

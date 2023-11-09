@@ -161,6 +161,14 @@ func (vp VotingParams) Equal(other VotingParams) bool {
 	return vp.VotingPeriod == other.VotingPeriod
 }
 
+func (vp VotingParams) GetVotingPeriodWithExpedited(isExpedited bool) *time.Duration {
+	if isExpedited {
+		return vp.ExpeditedVotingPeriod
+	}
+
+	return vp.VotingPeriod
+}
+
 func validateVotingParams(i interface{}) error {
 	v, ok := i.(VotingParams)
 	if !ok {

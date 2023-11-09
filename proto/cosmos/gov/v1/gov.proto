@@ -125,6 +125,9 @@ message DepositParams {
 message VotingParams {
   //  Length of the voting period.
   google.protobuf.Duration voting_period = 1 [(gogoproto.stdduration) = true];
+
+  // Length of the expedited voting period.
+  google.protobuf.Duration expedited_voting_period = 2 [ (gogoproto.stdduration) = true];
 }
 
 // TallyParams defines the params for tallying votes on governance proposals.

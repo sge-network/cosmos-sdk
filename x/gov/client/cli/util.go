@@ -45,7 +45,7 @@ func parseSubmitLegacyProposalFlags(fs *pflag.FlagSet) (*legacyProposal, error) 
 		proposal.Description, _ = fs.GetString(FlagDescription)
 		proposal.Type = govutils.NormalizeProposalType(proposalType)
 		proposal.Deposit, _ = fs.GetString(FlagDeposit)
-		proposal.
+		proposal.IsExpedited, _ = fs.GetBool(FlagIsExpedited)
 		if err := proposal.validate(); err != nil {
 			return nil, err
 		}

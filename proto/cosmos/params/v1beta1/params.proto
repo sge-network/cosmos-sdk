@@ -16,6 +16,7 @@ message ParameterChangeProposal {
   string               title       = 1;
   string               description = 2;
   repeated ParamChange changes     = 3 [(gogoproto.nullable) = false];
+  bool                 is_expedited = 4;
 }
 
 // ParamChange defines an individual parameter change, for use in
