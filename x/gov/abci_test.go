@@ -226,7 +226,7 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 	require.False(t, activeQueue.Valid())
 	activeQueue.Close()
 
-	proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, app.StakingKeeper.TokensFromConsensusPower(ctx, 5))}
+	proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, app.StakingKeeper.TokensFromConsensusPower(ctx, 10))}
 	newProposalMsg, err := v1.NewMsgSubmitProposal([]sdk.Msg{mkTestLegacyContent(t)}, proposalCoins, addrs[0].String(), "")
 	require.NoError(t, err)
 
@@ -295,10 +295,10 @@ func TestProposalPassedEndblocker(t *testing.T) {
 	require.NotNil(t, macc)
 	initialModuleAccCoins := app.BankKeeper.GetAllBalances(ctx, macc.GetAddress())
 
-	proposal, err := app.GovKeeper.SubmitProposal(ctx, []sdk.Msg{mkTestLegacyContent(t)}, "")
+	proposal, err := app.GovKeeper.SubmitProposal(ctx, []sdk.Msg{mkTestLegacyContent(t)}, "", false)
 	require.NoError(t, err)
 
-	proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, app.StakingKeeper.TokensFromConsensusPower(ctx, 10))}
+	proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, app.StakingKeeper.TokensFromConsensusPower(ctx, 20))}
 	newDepositMsg := v1.NewMsgDeposit(addrs[0], proposal.Id, proposalCoins)
 
 	res, err := govMsgSvr.Deposit(sdk.WrapSDKContext(ctx), newDepositMsg)
@@ -343,10 +343,10 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 	staking.EndBlocker(ctx, app.StakingKeeper)
 
 	msg := banktypes.NewMsgSend(authtypes.NewModuleAddress(types.ModuleName), addrs[0], sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000))))
-	proposal, err := app.GovKeeper.SubmitProposal(ctx, []sdk.Msg{msg}, "")
+	proposal, err := app.GovKeeper.SubmitProposal(ctx, []sdk.Msg{msg}, "", false)
 	require.NoError(t, err)
 
-	proposalCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, app.StakingKeeper.TokensFromConsensusPower(ctx, 10)))
+	proposalCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, app.StakingKeeper.TokensFromConsensusPower(ctx, 20)))
 	newDepositMsg := v1.NewMsgDeposit(addrs[0], proposal.Id, proposalCoins)
 
 	govMsgSvr := keeper.NewMsgServerImpl(app.GovKeeper)
@@ -383,4 +383,14 @@ func createValidators(t *testing.T, stakingMsgSvr stakingtypes.MsgServer, ctx sd
 		require.NoError(t, err)
 		require.NotNil(t, res)
 	}
+}
+
+// With expedited proposal's minimum deposit set higher than the default deposit, we must
+// initialize and deposit an amount depositMultiplier times larger
+// than the regular min deposit amount.
+func getDepositMultiplier(isExpedited bool) int64 {
+	if !isExpedited {
+		return 1
+	}
+	return v1.DefaultMinExpeditedDepositTokens.Quo(v1.DefaultMinDepositTokens).Int64()
 }

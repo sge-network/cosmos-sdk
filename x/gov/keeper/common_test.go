@@ -25,7 +25,7 @@ var (
 )
 
 func getTestProposal() []sdk.Msg {
-	legacyProposalMsg, err := v1.NewLegacyContent(v1beta1.NewTextProposal("Title", "description"), authtypes.NewModuleAddress(types.ModuleName).String())
+	legacyProposalMsg, err := v1.NewLegacyContent(v1beta1.NewTextProposal("Title", "description", false), authtypes.NewModuleAddress(types.ModuleName).String())
 	if err != nil {
 		panic(err)
 	}

@@ -34,10 +34,10 @@ func TestProposalStatus_Format(t *testing.T) {
 func TestNestedAnys(t *testing.T) {
 	// TODO https://github.com/cosmos/cosmos-sdk/issues/10965
 	t.Skip()
-	testProposal := v1beta1.NewTextProposal("Proposal", "testing proposal")
+	testProposal := v1beta1.NewTextProposal("Proposal", "testing proposal", false)
 	msgContent, err := v1.NewLegacyContent(testProposal, "cosmos1govacct")
 	require.NoError(t, err)
-	proposal, err := v1.NewProposal([]sdk.Msg{msgContent}, 1, "", time.Now(), time.Now())
+	proposal, err := v1.NewProposal([]sdk.Msg{msgContent}, 1, "", time.Now(), time.Now(), false)
 	require.NoError(t, err)
 
 	require.Equal(t, "TODO Fix panic here", proposal.String())

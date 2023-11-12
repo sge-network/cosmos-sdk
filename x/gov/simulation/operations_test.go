@@ -39,6 +39,7 @@ func (m MockWeightedProposalContent) ContentSimulatorFn() simtypes.ContentSimula
 		return v1beta1.NewTextProposal(
 			fmt.Sprintf("title-%d: %s", m.n, simtypes.RandStringOfLength(r, 100)),
 			fmt.Sprintf("description-%d: %s", m.n, simtypes.RandStringOfLength(r, 4000)),
+			false,
 		)
 	}
 }
@@ -140,14 +141,14 @@ func TestSimulateMsgDeposit(t *testing.T) {
 	accounts := getTestingAccounts(t, r, app, ctx, 3)
 
 	// setup a proposal
-	content := v1beta1.NewTextProposal("Test", "description")
+	content := v1beta1.NewTextProposal("Test", "description", false)
 	contentMsg, err := v1.NewLegacyContent(content, app.GovKeeper.GetGovernanceAccount(ctx).GetAddress().String())
 	require.NoError(t, err)
 
 	submitTime := ctx.BlockHeader().Time
 	depositPeriod := app.GovKeeper.GetDepositParams(ctx).MaxDepositPeriod
 
-	proposal, err := v1.NewProposal([]sdk.Msg{contentMsg}, 1, "", submitTime, submitTime.Add(*depositPeriod))
+	proposal, err := v1.NewProposal([]sdk.Msg{contentMsg}, 1, "", submitTime, submitTime.Add(*depositPeriod), false)
 	require.NoError(t, err)
 
 	app.GovKeeper.SetProposal(ctx, proposal)
@@ -187,13 +188,13 @@ func TestSimulateMsgVote(t *testing.T) {
 
 	// setup a proposal
 	govAcc := app.GovKeeper.GetGovernanceAccount(ctx).GetAddress().String()
-	contentMsg, err := v1.NewLegacyContent(v1beta1.NewTextProposal("Test", "description"), govAcc)
+	contentMsg, err := v1.NewLegacyContent(v1beta1.NewTextProposal("Test", "description", false), govAcc)
 	require.NoError(t, err)
 
 	submitTime := ctx.BlockHeader().Time
 	depositPeriod := app.GovKeeper.GetDepositParams(ctx).MaxDepositPeriod
 
-	proposal, err := v1.NewProposal([]sdk.Msg{contentMsg}, 1, "", submitTime, submitTime.Add(*depositPeriod))
+	proposal, err := v1.NewProposal([]sdk.Msg{contentMsg}, 1, "", submitTime, submitTime.Add(*depositPeriod), false)
 	require.NoError(t, err)
 
 	app.GovKeeper.ActivateVotingPeriod(ctx, proposal)
@@ -231,12 +232,12 @@ func TestSimulateMsgVoteWeighted(t *testing.T) {
 
 	// setup a proposal
 	govAcc := app.GovKeeper.GetGovernanceAccount(ctx).GetAddress().String()
-	contentMsg, err := v1.NewLegacyContent(v1beta1.NewTextProposal("Test", "description"), govAcc)
+	contentMsg, err := v1.NewLegacyContent(v1beta1.NewTextProposal("Test", "description", false), govAcc)
 	require.NoError(t, err)
 	submitTime := ctx.BlockHeader().Time
 	depositPeriod := app.GovKeeper.GetDepositParams(ctx).MaxDepositPeriod
 
-	proposal, err := v1.NewProposal([]sdk.Msg{contentMsg}, 1, "", submitTime, submitTime.Add(*depositPeriod))
+	proposal, err := v1.NewProposal([]sdk.Msg{contentMsg}, 1, "", submitTime, submitTime.Add(*depositPeriod), false)
 	require.NoError(t, err)
 
 	app.GovKeeper.ActivateVotingPeriod(ctx, proposal)

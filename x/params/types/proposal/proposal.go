@@ -21,8 +21,8 @@ func init() {
 	govtypes.RegisterProposalType(ProposalTypeChange)
 }
 
-func NewParameterChangeProposal(title, description string, changes []ParamChange) *ParameterChangeProposal {
-	return &ParameterChangeProposal{title, description, changes}
+func NewParameterChangeProposal(title, description string, changes []ParamChange, isExpedited bool) *ParameterChangeProposal {
+	return &ParameterChangeProposal{title, description, changes, isExpedited}
 }
 
 // GetTitle returns the title of a parameter change proposal.

@@ -50,6 +50,17 @@ func ValidateGenesis(data *GenesisState) error {
 			threshold.String())
 	}
 
+	expeditedThreshold := data.TallyParams.ExpeditedThreshold
+	if expeditedThreshold.IsNegative() || expeditedThreshold.GT(sdk.OneDec()) {
+		return fmt.Errorf("governance vote expedited threshold should be positive and less or equal to one, is %s",
+			expeditedThreshold.String())
+	}
+
+	if expeditedThreshold.LTE(threshold) {
+		return fmt.Errorf("governance vote expedited threshold should be greater than vote threshold, is %s",
+			expeditedThreshold.String())
+	}
+
 	veto := data.TallyParams.VetoThreshold
 	if veto.IsNegative() || veto.GT(sdk.OneDec()) {
 		return fmt.Errorf("governance vote veto threshold should be positive and less or equal to one, is %s",
@@ -58,6 +69,17 @@ func ValidateGenesis(data *GenesisState) error {
 
 	if !data.DepositParams.MinDeposit.IsValid() {
 		return fmt.Errorf("governance deposit amount must be a valid sdk.Coins amount, is %s",
+			data.DepositParams.MinDeposit.String())
+	}
+
+	if !data.DepositParams.MinExpeditedDeposit.IsValid() {
+		return fmt.Errorf("governance min expedited deposit amount must be a valid sdk.Coins amount, is %s",
+			data.DepositParams.MinExpeditedDeposit.String())
+	}
+
+	if data.DepositParams.MinExpeditedDeposit.IsAllLTE(data.DepositParams.MinDeposit) {
+		return fmt.Errorf("governance min expedited deposit amount %s must be greater than regular min deposit %s",
+			data.DepositParams.MinExpeditedDeposit.String(),
 			data.DepositParams.MinDeposit.String())
 	}
 

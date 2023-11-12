@@ -169,10 +169,10 @@ func TestParseSubmitProposal(t *testing.T) {
 	require.Error(t, err)
 
 	// ok json
-	msgs, metadata, deposit, err := parseSubmitProposal(cdc, okJSON.Name())
+	proposal, msgs, deposit, err := parseSubmitProposal(cdc, okJSON.Name())
 	require.NoError(t, err, "unexpected error")
 	require.Equal(t, sdk.NewCoins(sdk.NewCoin("test", sdk.NewInt(1000))), deposit)
-	require.Equal(t, base64.StdEncoding.EncodeToString(expectedMetadata), metadata)
+	require.Equal(t, base64.StdEncoding.EncodeToString(expectedMetadata), proposal.Metadata)
 	require.Len(t, msgs, 3)
 	msg1, ok := msgs[0].(*banktypes.MsgSend)
 	require.True(t, ok)

@@ -16,7 +16,7 @@ import (
 
 func TestConvertToLegacyProposal(t *testing.T) {
 	propTime := time.Unix(1e9, 0)
-	legacyContentMsg, err := v1.NewLegacyContent(v1beta1.NewTextProposal("title", "description"), "cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh")
+	legacyContentMsg, err := v1.NewLegacyContent(v1beta1.NewTextProposal("title", "description", false), "cosmos1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34mf0eh")
 	require.NoError(t, err)
 	msgs := []sdk.Msg{legacyContentMsg}
 	msgsAny, err := tx.SetMsgs(msgs)

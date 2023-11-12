@@ -134,10 +134,10 @@ func TestMsgVoteWeighted(t *testing.T) {
 func TestMsgSubmitProposal_ValidateBasic(t *testing.T) {
 	metadata := "metadata"
 	// Valid msg
-	msg1, err := v1.NewLegacyContent(v1beta1.NewTextProposal("Title", "description"), addrs[0].String())
+	msg1, err := v1.NewLegacyContent(v1beta1.NewTextProposal("Title", "description", false), addrs[0].String())
 	require.NoError(t, err)
 	// Invalid msg
-	msg2, err := v1.NewLegacyContent(v1beta1.NewTextProposal("Title", "description"), "foo")
+	msg2, err := v1.NewLegacyContent(v1beta1.NewTextProposal("Title", "description", false), "foo")
 	require.NoError(t, err)
 
 	tests := []struct {

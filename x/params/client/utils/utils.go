@@ -28,6 +28,7 @@ type (
 		Description string           `json:"description" yaml:"description"`
 		Changes     ParamChangesJSON `json:"changes" yaml:"changes"`
 		Deposit     string           `json:"deposit" yaml:"deposit"`
+		IsExpedited bool             `json:"is_expedited" yaml:"is_expedited"`
 	}
 )
 

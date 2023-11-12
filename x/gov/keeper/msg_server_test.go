@@ -426,7 +426,7 @@ func (suite *KeeperTestSuite) TestLegacyMsgSubmitProposal() {
 		"all good": {
 			preRun: func() (*v1beta1.MsgSubmitProposal, error) {
 				return v1beta1.NewMsgSubmitProposal(
-					v1beta1.NewTextProposal("test", "I am test"),
+					v1beta1.NewTextProposal("test", "I am test", false),
 					initialDeposit,
 					proposer,
 				)
@@ -436,7 +436,7 @@ func (suite *KeeperTestSuite) TestLegacyMsgSubmitProposal() {
 		"all good with min deposit": {
 			preRun: func() (*v1beta1.MsgSubmitProposal, error) {
 				return v1beta1.NewMsgSubmitProposal(
-					v1beta1.NewTextProposal("test", "I am test"),
+					v1beta1.NewTextProposal("test", "I am test", false),
 					minDeposit,
 					proposer,
 				)

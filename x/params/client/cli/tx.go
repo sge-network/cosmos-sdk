@@ -68,7 +68,7 @@ Where proposal.json contains:
 
 			from := clientCtx.GetFromAddress()
 			content := paramproposal.NewParameterChangeProposal(
-				proposal.Title, proposal.Description, proposal.Changes.ToParamChanges(),
+				proposal.Title, proposal.Description, proposal.Changes.ToParamChanges(), proposal.IsExpedited,
 			)
 
 			deposit, err := sdk.ParseCoinsNormalized(proposal.Deposit)
@@ -76,7 +76,7 @@ Where proposal.json contains:
 				return err
 			}
 
-			msg, err := govv1beta1.NewMsgSubmitProposal(content, deposit, from)
+			msg, err := govv1beta1.NewMsgSubmitProposalWithExpedite(content, deposit, from, proposal.IsExpedited)
 			if err != nil {
 				return err
 			}

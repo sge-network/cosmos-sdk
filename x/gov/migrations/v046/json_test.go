@@ -33,7 +33,7 @@ func TestMigrateJSON(t *testing.T) {
 
 	govGenState := v1beta1.DefaultGenesisState()
 	propTime := time.Unix(1e9, 0)
-	contentAny, err := codectypes.NewAnyWithValue(v1beta1.NewTextProposal("my title", "my desc").(proto.Message))
+	contentAny, err := codectypes.NewAnyWithValue(v1beta1.NewTextProposal("my title", "my desc", false).(proto.Message))
 	require.NoError(t, err)
 	govGenState.Proposals = v1beta1.Proposals{
 		v1beta1.Proposal{
@@ -82,7 +82,8 @@ func TestMigrateJSON(t *testing.T) {
 				"amount": "10000000",
 				"denom": "stake"
 			}
-		]
+		],
+		"min_expedited_deposit": []
 	},
 	"deposits": [],
 	"proposals": [
@@ -95,6 +96,7 @@ func TestMigrateJSON(t *testing.T) {
 				"yes_count": "0"
 			},
 			"id": "1",
+			"is_expedited": false,
 			"messages": [
 				{
 					"@type": "/cosmos.gov.v1.MsgExecLegacyContent",
@@ -102,6 +104,7 @@ func TestMigrateJSON(t *testing.T) {
 					"content": {
 						"@type": "/cosmos.gov.v1beta1.TextProposal",
 						"description": "my desc",
+						"is_expedited": false,
 						"title": "my title"
 					}
 				}
@@ -121,6 +124,8 @@ func TestMigrateJSON(t *testing.T) {
 	],
 	"starting_proposal_id": "1",
 	"tally_params": {
+		"expedited_quorum": "",
+		"expedited_threshold": "",
 		"quorum": "0.334000000000000000",
 		"threshold": "0.500000000000000000",
 		"veto_threshold": "0.334000000000000000"
@@ -150,6 +155,7 @@ func TestMigrateJSON(t *testing.T) {
 		}
 	],
 	"voting_params": {
+		"expedited_voting_period": null,
 		"voting_period": "172800s"
 	}
 }`

@@ -18,10 +18,11 @@ import (
 )
 
 var (
-	valTokens           = sdk.TokensFromConsensusPower(42, sdk.DefaultPowerReduction)
-	TestProposal        = v1beta1.NewTextProposal("Test", "description")
-	TestDescription     = stakingtypes.NewDescription("T", "E", "S", "T", "Z")
-	TestCommissionRates = stakingtypes.NewCommissionRates(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
+	valTokens             = sdk.TokensFromConsensusPower(42, sdk.DefaultPowerReduction)
+	TestProposal          = v1beta1.NewTextProposal("Test", "description", false)
+	TestExpeditedProposal = v1beta1.NewTextProposal("Test", "description", true)
+	TestDescription       = stakingtypes.NewDescription("T", "E", "S", "T", "Z")
+	TestCommissionRates   = stakingtypes.NewCommissionRates(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
 )
 
 // mkTestLegacyContent creates a MsgExecLegacyContent for testing purposes.

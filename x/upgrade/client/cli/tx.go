@@ -84,7 +84,12 @@ func NewCmdSubmitLegacyUpgradeProposal() *cobra.Command {
 				return err
 			}
 
-			msg, err := v1beta1.NewMsgSubmitProposal(content, deposit, from)
+			isExpedited, err := cmd.Flags().GetBool(cli.FlagIsExpedited)
+			if err != nil {
+				return err
+			}
+
+			msg, err := v1beta1.NewMsgSubmitProposalWithExpedite(content, deposit, from, isExpedited)
 			if err != nil {
 				return err
 			}
@@ -99,6 +104,7 @@ func NewCmdSubmitLegacyUpgradeProposal() *cobra.Command {
 	cmd.Flags().Int64(FlagUpgradeHeight, 0, "The height at which the upgrade must happen")
 	cmd.Flags().String(FlagUpgradeInfo, "", "Info for the upgrade plan such as new version download urls, etc.")
 	cmd.Flags().Bool(FlagNoValidate, false, "Skip validation of the upgrade info")
+	cmd.Flags().Bool(cli.FlagIsExpedited, false, "Whether a proposal is expedited or not")
 	cmd.Flags().String(FlagDaemonName, getDefaultDaemonName(), "The name of the executable being upgraded (for upgrade-info validation). Default is the DAEMON_NAME env var if set, or else this executable")
 
 	return cmd
@@ -141,7 +147,12 @@ func NewCmdSubmitLegacyCancelUpgradeProposal() *cobra.Command {
 
 			content := types.NewCancelSoftwareUpgradeProposal(title, description)
 
-			msg, err := v1beta1.NewMsgSubmitProposal(content, deposit, from)
+			isExpedited, err := cmd.Flags().GetBool(cli.FlagIsExpedited)
+			if err != nil {
+				return err
+			}
+
+			msg, err := v1beta1.NewMsgSubmitProposalWithExpedite(content, deposit, from, isExpedited)
 			if err != nil {
 				return err
 			}
@@ -153,6 +164,7 @@ func NewCmdSubmitLegacyCancelUpgradeProposal() *cobra.Command {
 	cmd.Flags().String(cli.FlagTitle, "", "title of proposal")             //nolint:staticcheck
 	cmd.Flags().String(cli.FlagDescription, "", "description of proposal") //nolint:staticcheck
 	cmd.Flags().String(cli.FlagDeposit, "", "deposit of proposal")
+	cmd.Flags().Bool(cli.FlagIsExpedited, false, "flag indicating whether a proposal is expedited")
 	cmd.MarkFlagRequired(cli.FlagTitle)       //nolint:staticcheck
 	cmd.MarkFlagRequired(cli.FlagDescription) //nolint:staticcheck
 

@@ -44,7 +44,7 @@ func TestContentFromProposalType(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		content, ok := v1beta1.ContentFromProposalType("title", "foo", test.proposalType)
+		content, ok := v1beta1.ContentFromProposalType("title", "foo", test.proposalType, false)
 		if test.expectedType == "" {
 			require.False(t, ok)
 			continue
