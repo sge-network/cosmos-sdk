@@ -274,56 +274,288 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 }
 
 func TestProposalPassedEndblocker(t *testing.T) {
-	app := simapp.Setup(t, false)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-	addrs := simapp.AddTestAddrs(app, ctx, 10, valTokens)
+	tests := []struct {
+		name        string
+		isExpedited bool
+	}{
+		{
+			name:        "regular proposal",
+			isExpedited: false,
+		},
+		{
+			name:        "expedited proposal",
+			isExpedited: true,
+		},
+	}
 
-	SortAddresses(addrs)
+	for _, tc := range tests {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			app := simapp.Setup(t, false)
+			ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+			addrs := simapp.AddTestAddrs(app, ctx, 10, valTokens)
 
-	govMsgSvr := keeper.NewMsgServerImpl(app.GovKeeper)
-	stakingMsgSvr := stakingkeeper.NewMsgServerImpl(app.StakingKeeper)
+			SortAddresses(addrs)
 
-	header := tmproto.Header{Height: app.LastBlockHeight() + 1}
-	app.BeginBlock(abci.RequestBeginBlock{Header: header})
+			govMsgSvr := keeper.NewMsgServerImpl(app.GovKeeper)
+			stakingMsgSvr := stakingkeeper.NewMsgServerImpl(app.StakingKeeper)
 
-	valAddr := sdk.ValAddress(addrs[0])
+			header := tmproto.Header{Height: app.LastBlockHeight() + 1}
+			app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
-	createValidators(t, stakingMsgSvr, ctx, []sdk.ValAddress{valAddr}, []int64{10})
-	staking.EndBlocker(ctx, app.StakingKeeper)
+			valAddr := sdk.ValAddress(addrs[0])
 
-	macc := app.GovKeeper.GetGovernanceAccount(ctx)
-	require.NotNil(t, macc)
-	initialModuleAccCoins := app.BankKeeper.GetAllBalances(ctx, macc.GetAddress())
+			createValidators(t, stakingMsgSvr, ctx, []sdk.ValAddress{valAddr}, []int64{10})
+			staking.EndBlocker(ctx, app.StakingKeeper)
 
-	proposal, err := app.GovKeeper.SubmitProposal(ctx, []sdk.Msg{mkTestLegacyContent(t)}, "", false)
-	require.NoError(t, err)
+			macc := app.GovKeeper.GetGovernanceAccount(ctx)
+			require.NotNil(t, macc)
+			initialModuleAccCoins := app.BankKeeper.GetAllBalances(ctx, macc.GetAddress())
 
-	proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, app.StakingKeeper.TokensFromConsensusPower(ctx, 20))}
-	newDepositMsg := v1.NewMsgDeposit(addrs[0], proposal.Id, proposalCoins)
+			proposal, err := app.GovKeeper.SubmitProposal(ctx, []sdk.Msg{mkTestLegacyContent(t)}, "", tc.isExpedited)
+			require.NoError(t, err)
 
-	res, err := govMsgSvr.Deposit(sdk.WrapSDKContext(ctx), newDepositMsg)
-	require.NoError(t, err)
-	require.NotNil(t, res)
+			proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, app.StakingKeeper.TokensFromConsensusPower(ctx, 20))}
+			newDepositMsg := v1.NewMsgDeposit(addrs[0], proposal.Id, proposalCoins)
 
-	macc = app.GovKeeper.GetGovernanceAccount(ctx)
-	require.NotNil(t, macc)
-	moduleAccCoins := app.BankKeeper.GetAllBalances(ctx, macc.GetAddress())
+			res, err := govMsgSvr.Deposit(sdk.WrapSDKContext(ctx), newDepositMsg)
+			require.NoError(t, err)
+			require.NotNil(t, res)
 
-	deposits := initialModuleAccCoins.Add(proposal.TotalDeposit...).Add(proposalCoins...)
-	require.True(t, moduleAccCoins.IsEqual(deposits))
+			macc = app.GovKeeper.GetGovernanceAccount(ctx)
+			require.NotNil(t, macc)
+			moduleAccCoins := app.BankKeeper.GetAllBalances(ctx, macc.GetAddress())
 
-	err = app.GovKeeper.AddVote(ctx, proposal.Id, addrs[0], v1.NewNonSplitVoteOption(v1.OptionYes), "")
-	require.NoError(t, err)
+			deposits := initialModuleAccCoins.Add(proposal.TotalDeposit...).Add(proposalCoins...)
+			require.True(t, moduleAccCoins.IsEqual(deposits))
 
-	newHeader := ctx.BlockHeader()
-	newHeader.Time = ctx.BlockHeader().Time.Add(*app.GovKeeper.GetDepositParams(ctx).MaxDepositPeriod).Add(*app.GovKeeper.GetVotingParams(ctx).VotingPeriod)
-	ctx = ctx.WithBlockHeader(newHeader)
+			err = app.GovKeeper.AddVote(ctx, proposal.Id, addrs[0], v1.NewNonSplitVoteOption(v1.OptionYes), "")
+			require.NoError(t, err)
 
-	gov.EndBlocker(ctx, app.GovKeeper)
+			newHeader := ctx.BlockHeader()
+			newHeader.Time = ctx.BlockHeader().Time.Add(*app.GovKeeper.GetDepositParams(ctx).MaxDepositPeriod).Add(*app.GovKeeper.GetVotingParams(ctx).VotingPeriod)
+			ctx = ctx.WithBlockHeader(newHeader)
 
-	macc = app.GovKeeper.GetGovernanceAccount(ctx)
-	require.NotNil(t, macc)
-	require.True(t, app.BankKeeper.GetAllBalances(ctx, macc.GetAddress()).IsEqual(initialModuleAccCoins))
+			gov.EndBlocker(ctx, app.GovKeeper)
+
+			macc = app.GovKeeper.GetGovernanceAccount(ctx)
+			require.NotNil(t, macc)
+			require.True(t, app.BankKeeper.GetAllBalances(ctx, macc.GetAddress()).IsEqual(initialModuleAccCoins))
+		})
+	}
+}
+
+func TestExpeditedProposalPassAndConvertToRegular(t *testing.T) {
+	testcases := []struct {
+		name string
+		// flag indicating whether the expedited proposal passes.
+		isExpeditedPasses bool
+		// flag indicating whether the converted regular proposal is expected to eventually pass
+		isRegularEventuallyPassing bool
+	}{
+		{
+			name:              "expedited passes and not converted to regular",
+			isExpeditedPasses: true,
+		},
+		{
+			name:                       "expedited fails, converted to regular - regular eventually passes",
+			isExpeditedPasses:          false,
+			isRegularEventuallyPassing: true,
+		},
+		{
+			name:                       "expedited fails, converted to regular - regular eventually fails",
+			isExpeditedPasses:          false,
+			isRegularEventuallyPassing: false,
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			isExpedited := true
+			p, err := v1.NewProposal(TestProposal, 1, "", time.Now(), time.Now(), false)
+
+			app := simapp.Setup(t, false)
+			ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+			addrs := simapp.AddTestAddrs(app, ctx, 10, valTokens)
+
+			SortAddresses(addrs)
+
+			govMsgSvr := keeper.NewMsgServerImpl(app.GovKeeper)
+			stakingMsgSvr := stakingkeeper.NewMsgServerImpl(app.StakingKeeper)
+
+			header := tmproto.Header{Height: app.LastBlockHeight() + 1}
+			app.BeginBlock(abci.RequestBeginBlock{Header: header})
+
+			valAddr := sdk.ValAddress(addrs[0])
+
+			createValidators(t, stakingMsgSvr, ctx, []sdk.ValAddress{valAddr}, []int64{10})
+			staking.EndBlocker(ctx, app.StakingKeeper)
+
+			inactiveQueue := app.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+			require.False(t, inactiveQueue.Valid())
+			inactiveQueue.Close()
+			activeQueue := app.GovKeeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+			require.False(t, activeQueue.Valid())
+			activeQueue.Close()
+
+			macc := app.GovKeeper.GetGovernanceAccount(ctx)
+			require.NotNil(t, macc)
+
+			initialModuleAccCoins := app.BankKeeper.GetAllBalances(ctx, macc.GetAddress())
+
+			submitterInitialBalance := app.BankKeeper.GetAllBalances(ctx, addrs[0])
+			depositorInitialBalance := app.BankKeeper.GetAllBalances(ctx, addrs[1])
+
+			proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, app.StakingKeeper.TokensFromConsensusPower(ctx, 10))}
+			newProposalMsg, err := v1.NewMsgSubmitProposalWithExpedite(TestProposal, proposalCoins, addrs[0].String(), p.Metadata, isExpedited)
+			require.NoError(t, err)
+
+			res, err := govMsgSvr.SubmitProposal(ctx, newProposalMsg)
+			require.NoError(t, err)
+			require.NotNil(t, res)
+
+			proposalID := res.ProposalId
+
+			newHeader := ctx.BlockHeader()
+			newHeader.Time = ctx.BlockHeader().Time.Add(time.Duration(1) * time.Second)
+			ctx = ctx.WithBlockHeader(newHeader)
+
+			newDepositMsg := v1.NewMsgDeposit(addrs[1], proposalID, proposalCoins)
+
+			_, err = govMsgSvr.Deposit(ctx, newDepositMsg)
+			require.NoError(t, err)
+			require.NotNil(t, res)
+
+			votingParams := app.GovKeeper.GetVotingParams(ctx)
+			newHeader = ctx.BlockHeader()
+
+			depositPeriod := app.GovKeeper.GetDepositParams(ctx).MaxDepositPeriod
+			newHeader.Time = ctx.BlockHeader().Time.Add(*depositPeriod).Add(*votingParams.ExpeditedVotingPeriod)
+			ctx = ctx.WithBlockHeader(newHeader)
+
+			inactiveQueue = app.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+			require.False(t, inactiveQueue.Valid())
+			inactiveQueue.Close()
+
+			activeQueue = app.GovKeeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+			require.True(t, activeQueue.Valid())
+
+			activeProposalID := types.GetProposalIDFromBytes(activeQueue.Value())
+			proposal, ok := app.GovKeeper.GetProposal(ctx, activeProposalID)
+			require.True(t, ok)
+			require.Equal(t, v1.StatusVotingPeriod, proposal.Status)
+
+			activeQueue.Close()
+
+			if tc.isExpeditedPasses {
+				// Validator votes YES, letting the expedited proposal pass.
+				voteOption := v1.NewNonSplitVoteOption(v1.OptionYes)
+				err = app.GovKeeper.AddVote(ctx, proposal.Id, addrs[0], voteOption, "")
+				require.NoError(t, err)
+			}
+
+			// Here the expedited proposal is converted to regular after expiry.
+			gov.EndBlocker(ctx, app.GovKeeper)
+
+			activeQueue = app.GovKeeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+
+			if tc.isExpeditedPasses {
+				require.False(t, activeQueue.Valid())
+
+				proposal, ok = app.GovKeeper.GetProposal(ctx, activeProposalID)
+				require.True(t, ok)
+
+				require.Equal(t, v1.StatusPassed, proposal.Status)
+
+				submitterEventualBalance := app.BankKeeper.GetAllBalances(ctx, addrs[0])
+				depositorEventualBalance := app.BankKeeper.GetAllBalances(ctx, addrs[1])
+
+				eventualModuleAccCoins := app.BankKeeper.GetAllBalances(ctx, macc.GetAddress())
+
+				// Module account has refunded the deposit
+				require.Equal(t, initialModuleAccCoins, eventualModuleAccCoins)
+
+				require.Equal(t, submitterInitialBalance, submitterEventualBalance)
+				require.Equal(t, depositorInitialBalance, depositorEventualBalance)
+				return
+			}
+
+			// Expedited proposal should be converted to a regular proposal instead.
+			require.True(t, activeQueue.Valid())
+
+			activeProposalID = types.GetProposalIDFromBytes(activeQueue.Value())
+			activeQueue.Close()
+
+			proposal, ok = app.GovKeeper.GetProposal(ctx, activeProposalID)
+			require.True(t, ok)
+			require.Equal(t, v1.StatusVotingPeriod, proposal.Status)
+			require.False(t, proposal.IsExpedited)
+			require.Equal(t, proposal.VotingStartTime.Add(*votingParams.VotingPeriod), proposal.VotingEndTime)
+
+			// We also want to make sure that the deposit is not refunded yet and is still present in the module account
+			macc = app.GovKeeper.GetGovernanceAccount(ctx)
+			require.NotNil(t, macc)
+			intermediateModuleAccCoins := app.BankKeeper.GetAllBalances(ctx, macc.GetAddress())
+			require.NotEqual(t, initialModuleAccCoins, intermediateModuleAccCoins)
+
+			// Submit proposal deposit + 1 extra top up deposit
+			expectedIntermediateMofuleAccCoings := initialModuleAccCoins.Add(proposalCoins...).Add(proposalCoins...)
+			require.Equal(t, expectedIntermediateMofuleAccCoings, intermediateModuleAccCoins)
+
+			// block header time at the voting period
+			newHeader.Time = ctx.BlockHeader().Time.Add(*app.GovKeeper.GetDepositParams(ctx).MaxDepositPeriod).Add(*votingParams.VotingPeriod)
+			ctx = ctx.WithBlockHeader(newHeader)
+
+			inactiveQueue = app.GovKeeper.InactiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+			require.False(t, inactiveQueue.Valid())
+			inactiveQueue.Close()
+
+			activeQueue = app.GovKeeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+			require.True(t, activeQueue.Valid())
+
+			if tc.isRegularEventuallyPassing {
+				// Validator votes YES, letting the converted regular proposal pass.
+				err = app.GovKeeper.AddVote(ctx, proposal.Id, addrs[0], v1.NewNonSplitVoteOption(v1.OptionYes), proposal.Metadata)
+				require.NoError(t, err)
+			}
+
+			// Here we validate the converted regular proposal
+			gov.EndBlocker(ctx, app.GovKeeper)
+
+			macc = app.GovKeeper.GetGovernanceAccount(ctx)
+			require.NotNil(t, macc)
+			eventualModuleAccCoins := app.BankKeeper.GetAllBalances(ctx, macc.GetAddress())
+
+			submitterEventualBalance := app.BankKeeper.GetAllBalances(ctx, addrs[0])
+			depositorEventualBalance := app.BankKeeper.GetAllBalances(ctx, addrs[1])
+
+			activeQueue = app.GovKeeper.ActiveProposalQueueIterator(ctx, ctx.BlockHeader().Time)
+			require.False(t, activeQueue.Valid())
+
+			proposal, ok = app.GovKeeper.GetProposal(ctx, activeProposalID)
+			require.True(t, ok)
+
+			if tc.isRegularEventuallyPassing {
+				// Module account has refunded the deposit
+				require.Equal(t, initialModuleAccCoins, eventualModuleAccCoins)
+				require.Equal(t, submitterInitialBalance, submitterEventualBalance)
+				require.Equal(t, depositorInitialBalance, depositorEventualBalance)
+
+				require.Equal(t, v1.StatusPassed, proposal.Status)
+				return
+			}
+
+			// Not enough votes - module account has burned the deposit
+			require.Equal(t, initialModuleAccCoins, eventualModuleAccCoins)
+			require.Equal(t, submitterInitialBalance.Sub(proposalCoins...), submitterEventualBalance)
+			require.Equal(t, depositorInitialBalance.Sub(proposalCoins...), depositorEventualBalance)
+
+			macc = app.GovKeeper.GetGovernanceAccount(ctx)
+			require.NotNil(t, macc)
+			require.True(t, app.BankKeeper.GetAllBalances(ctx, macc.GetAddress()).IsEqual(initialModuleAccCoins))
+			require.Equal(t, v1.StatusRejected, proposal.Status)
+		})
+	}
 }
 
 func TestEndBlockerProposalHandlerFailed(t *testing.T) {

@@ -2,6 +2,7 @@ package gov_test
 
 import (
 	"bytes"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"log"
 	"sort"
 	"testing"
@@ -19,7 +20,10 @@ import (
 
 var (
 	valTokens             = sdk.TokensFromConsensusPower(42, sdk.DefaultPowerReduction)
-	TestProposal          = v1beta1.NewTextProposal("Test", "description", false)
+	govAcct               = authtypes.NewModuleAddress(types.ModuleName)
+	_, _, addr            = testdata.KeyTestPubAddr()
+	TestProposal          = getTestProposal()
+	TextProposal          = v1beta1.NewTextProposal("Test", "description", false)
 	TestExpeditedProposal = v1beta1.NewTextProposal("Test", "description", true)
 	TestDescription       = stakingtypes.NewDescription("T", "E", "S", "T", "Z")
 	TestCommissionRates   = stakingtypes.NewCommissionRates(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
@@ -27,7 +31,7 @@ var (
 
 // mkTestLegacyContent creates a MsgExecLegacyContent for testing purposes.
 func mkTestLegacyContent(t *testing.T) *v1.MsgExecLegacyContent {
-	msgContent, err := v1.NewLegacyContent(TestProposal, authtypes.NewModuleAddress(types.ModuleName).String())
+	msgContent, err := v1.NewLegacyContent(TextProposal, authtypes.NewModuleAddress(types.ModuleName).String())
 	require.NoError(t, err)
 
 	return msgContent
@@ -83,4 +87,15 @@ var pubkeys = []cryptotypes.PubKey{
 	ed25519.GenPrivKey().PubKey(),
 	ed25519.GenPrivKey().PubKey(),
 	ed25519.GenPrivKey().PubKey(),
+}
+
+func getTestProposal() []sdk.Msg {
+	legacyProposalMsg, err := v1.NewLegacyContent(v1beta1.NewTextProposal("Title", "description", false), authtypes.NewModuleAddress(types.ModuleName).String())
+	if err != nil {
+		panic(err)
+	}
+
+	return []sdk.Msg{
+		legacyProposalMsg,
+	}
 }
