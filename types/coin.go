@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-//-----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // Coin
 
 // NewCoin returns a new coin with a denomination and amount. It will panic if
@@ -20,7 +20,7 @@ func NewCoin(denom string, amount Int) Coin {
 	}
 
 	if err := coin.Validate(); err != nil {
-		panic(err)
+		panic(fmt.Errorf("%w, %#v", err, coin))
 	}
 
 	return coin
@@ -169,7 +169,7 @@ func (coin Coin) IsNil() bool {
 	return coin.Amount.BigInt() == nil
 }
 
-//-----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // Coins
 
 // Coins is a set of Coin, one per currency
@@ -334,7 +334,7 @@ func (coins Coins) safeAdd(coinsB Coins) (coalesced Coins) {
 		}
 	}
 
-	for denom, cL := range uniqCoins { //#nosec
+	for denom, cL := range uniqCoins { // #nosec
 		comboCoin := Coin{Denom: denom, Amount: NewInt(0)}
 		for _, c := range cL {
 			comboCoin = comboCoin.Add(c)
@@ -811,7 +811,7 @@ func removeZeroCoins(coins Coins) Coins {
 	return result
 }
 
-//-----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // Sort interface
 
 // Len implements sort.Interface for Coins
@@ -836,7 +836,7 @@ func (coins Coins) Sort() Coins {
 	return coins
 }
 
-//-----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // Parsing
 
 var (
