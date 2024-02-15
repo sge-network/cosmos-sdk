@@ -2,9 +2,10 @@ package simulation_test
 
 import (
 	"encoding/json"
-	"gotest.tools/v3/assert"
 	"math/rand"
 	"testing"
+
+	"gotest.tools/v3/assert"
 
 	"github.com/stretchr/testify/require"
 

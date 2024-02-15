@@ -69,7 +69,6 @@ func DownloadBinary(cfg *Config, info upgradetypes.Plan) error {
 	// download into the bin dir (works for one file)
 	binPath := cfg.UpgradeBin(info.Name)
 	err = getter.GetFile(binPath, url)
-
 	// if this fails, let's see if it is a zipped directory
 	if err != nil {
 		dirPath := cfg.UpgradeDir(info.Name)
