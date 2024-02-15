@@ -29,7 +29,8 @@
 // THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// nolint // this nolint lets us use this file in its original and unmodified form.
+//
+//nolint:all // this nolint lets us use this file in its original and unmodified form.
 package secp256k1
 
 import (
