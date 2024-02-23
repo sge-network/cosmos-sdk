@@ -124,9 +124,23 @@ func (k Keeper) CalculateDelegationRewards(ctx sdk.Context, val stakingtypes.Val
 
 		// TODO: remove after upgrade to v47 (TEMPORARY)
 		valAddr := del.GetValidatorAddr().String()
-		if valAddr == "sgevaloper1ne3ggqz37ehr0hjq3apfse65xshnhh6tga4wyr" ||
-			valAddr == "sgevaloper1e4n6enpatpe0a3eqw6gzcpgq2vgd9a3zcg8ffl" ||
-			valAddr == "sgevaloper1m8mhgf0x5kt4hn80dr2vxta0j8u082gawnt2cx" {
+		switch valAddr {
+		case "sgevaloper1ne3ggqz37ehr0hjq3apfse65xshnhh6tga4wyr",
+			"sgevaloper1e4n6enpatpe0a3eqw6gzcpgq2vgd9a3zcg8ffl",
+			"sgevaloper1m8mhgf0x5kt4hn80dr2vxta0j8u082gawnt2cx",
+			"sgevaloper1dg7avuz2ac5m3lsz69sk86dmlak4lwm4n72c79",
+			"sgevaloper1gdj5e9203wmk44rxmf87p3fdmzajresm6trgmd",
+			"sgevaloper18xxgnkl0lgqa4t0rmvj0uy22dmq2dy440d6ekf",
+			"sgevaloper178wtlg7k2267mez7g7a64z3eurt5l80nwqtwzp",
+			"sgevaloper1dlncwqr6gqajasqf6uv4fgmwc2253zmk239m54",
+			"sgevaloper16h0lxrp35es5nf6vr02vs9pem0lwlhp22984ms",
+			"sgevaloper1asgqe7suxsn5x0x6mcxspmy83a5pewp90x92ps",
+			"sgevaloper12d2s03lyhu4vunj2vj4ru8wz7gkt0cx4lh359x",
+			"sgevaloper14jpn9saszzhvlj6vut7ukv265rzx6x0efckuzq",
+			"sgevaloper1fd6a87854thyxegm4x4rcnjf02yhmdpmjl4aul",
+			"sgevaloper1dtkvkmjnjlcu36cz6v3rhqxfczhgfjuqdqc8e9",
+			"sgevaloper14tt4z5cgwph37fn89wvkau47cw92a5g05h62fx",
+			"sgevaloper12h30g8rtwvjdyvlftvrmg89kjl3g2pmxxqtjgq":
 			marginOfErr = sdk.NewDecFromInt(sdk.NewInt(3000000))
 		}
 
