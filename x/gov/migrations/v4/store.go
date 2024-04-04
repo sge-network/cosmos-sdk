@@ -51,6 +51,50 @@ func migrateParams(ctx sdk.Context, storeKey storetypes.StoreKey, legacySubspace
 	return nil
 }
 
+func migrateFixTitleWire(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.BinaryCodec) error {
+	store := ctx.KVStore(storeKey)
+	propStore := prefix.NewStore(store, v1.ProposalsKeyPrefix)
+
+	iter := propStore.Iterator(nil, nil)
+	defer iter.Close()
+
+	for ; iter.Valid(); iter.Next() {
+		var tmpProp govv1.TmpProposal
+		err := cdc.Unmarshal(iter.Value(), &tmpProp)
+		if err != nil {
+			return err
+		}
+
+		prop := govv1.Proposal{
+			Id:               tmpProp.Id,
+			Messages:         tmpProp.Messages,
+			FinalTallyResult: tmpProp.FinalTallyResult,
+			SubmitTime:       tmpProp.SubmitTime,
+			DepositEndTime:   tmpProp.DepositEndTime,
+			VotingStartTime:  tmpProp.VotingStartTime,
+			VotingEndTime:    tmpProp.VotingEndTime,
+			TotalDeposit:     tmpProp.TotalDeposit,
+			Metadata:         tmpProp.Metadata,
+			Expedited:        tmpProp.IsExpedited,
+			Status:           tmpProp.Status,
+			// the following added in 0.47 so no data to add
+			// Title: ,
+			// Summary: ,
+			// Proposer: ,
+		}
+
+		// set the new proposal with proposer
+		bz, err := cdc.Marshal(&prop)
+		if err != nil {
+			panic(err)
+		}
+
+		store.Set(types.ProposalKey(tmpProp.Id), bz)
+	}
+
+	return nil
+}
+
 func migrateProposalVotingPeriod(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.BinaryCodec) error {
 	store := ctx.KVStore(storeKey)
 	propStore := prefix.NewStore(store, v1.ProposalsKeyPrefix)
@@ -80,6 +124,10 @@ func migrateProposalVotingPeriod(ctx sdk.Context, storeKey storetypes.StoreKey, 
 // Addition of the new min initial deposit ratio parameter that is set to 0 by default.
 // Proposals in voting period are tracked in a separate index.
 func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, legacySubspace exported.ParamSubspace, cdc codec.BinaryCodec) error {
+	if err := migrateFixTitleWire(ctx, storeKey, cdc); err != nil {
+		return err
+	}
+
 	if err := migrateProposalVotingPeriod(ctx, storeKey, cdc); err != nil {
 		return err
 	}
