@@ -141,7 +141,7 @@ func (k Keeper) CalculateDelegationRewards(ctx sdk.Context, val stakingtypes.Val
 			"sgevaloper1dtkvkmjnjlcu36cz6v3rhqxfczhgfjuqdqc8e9",
 			"sgevaloper14tt4z5cgwph37fn89wvkau47cw92a5g05h62fx",
 			"sgevaloper12h30g8rtwvjdyvlftvrmg89kjl3g2pmxxqtjgq":
-			marginOfErr = sdk.NewDecFromInt(sdk.NewInt(3000000))
+			marginOfErr = sdk.NewDecFromInt(sdk.NewInt(300000000))
 		}
 
 		if stake.LTE(currentStake.Add(marginOfErr)) {
