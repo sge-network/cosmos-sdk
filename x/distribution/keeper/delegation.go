@@ -140,7 +140,8 @@ func (k Keeper) CalculateDelegationRewards(ctx sdk.Context, val stakingtypes.Val
 			"sgevaloper1fd6a87854thyxegm4x4rcnjf02yhmdpmjl4aul",
 			"sgevaloper1dtkvkmjnjlcu36cz6v3rhqxfczhgfjuqdqc8e9",
 			"sgevaloper14tt4z5cgwph37fn89wvkau47cw92a5g05h62fx",
-			"sgevaloper12h30g8rtwvjdyvlftvrmg89kjl3g2pmxxqtjgq":
+			"sgevaloper12h30g8rtwvjdyvlftvrmg89kjl3g2pmxxqtjgq",
+			"sgevaloper12cq7xjzhatky3pmmv2wu5n80yk4n33spa0xjzu":
 			marginOfErr = sdk.NewDecFromInt(sdk.NewInt(300000000))
 		}
 
