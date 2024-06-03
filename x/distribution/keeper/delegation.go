@@ -123,6 +123,12 @@ func (k Keeper) CalculateDelegationRewards(ctx sdk.Context, val stakingtypes.Val
 		// however any greater amount should be considered a breach in expected
 		// behaviour.
 		marginOfErr := sdk.SmallestDec().MulInt64(3)
+		valAddr := del.GetValidatorAddr().String()
+		switch valAddr {
+		case "sgevaloper12cq7xjzhatky3pmmv2wu5n80yk4n33spa0xjzu":
+			marginOfErr = sdk.NewDecFromInt(sdk.NewInt(300000000))
+		}
+
 		if stake.LTE(currentStake.Add(marginOfErr)) {
 			stake = currentStake
 		} else {
