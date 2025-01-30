@@ -125,7 +125,10 @@ func (k Keeper) CalculateDelegationRewards(ctx sdk.Context, val stakingtypes.Val
 		marginOfErr := sdk.SmallestDec().MulInt64(3)
 		valAddr := del.GetValidatorAddr().String()
 		switch valAddr {
-		case "sgevaloper12cq7xjzhatky3pmmv2wu5n80yk4n33spa0xjzu":
+		case "sgevaloper12cq7xjzhatky3pmmv2wu5n80yk4n33spa0xjzu",
+			"sgevaloper1m8mhgf0x5kt4hn80dr2vxta0j8u082gawnt2cx",
+			"sgevaloper1ne3ggqz37ehr0hjq3apfse65xshnhh6tga4wyr",
+			"sgevaloper1e4n6enpatpe0a3eqw6gzcpgq2vgd9a3zcg8ffl":
 			marginOfErr = sdk.NewDecFromInt(sdk.NewInt(300000000))
 		}
 
